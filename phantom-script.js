@@ -6,6 +6,7 @@ page.clipRect = { top: 0, left: 0, width: 1000, height: 1000 }
 
 // Passed in from parent process
 var url = system.args[1];
+var target = system.args[2];
 
 page.open(url, function start(status) {
 
@@ -21,9 +22,7 @@ page.open(url, function start(status) {
       });
 
       if ("complete" === readyState) {
-        // Return image of the page as base64-encoded string
-        var base64 = page.renderBase64('PNG');
-        system.stdout.write(base64);
+        page.render(target);
         phantom.exit();
       } else {
         checkReadyState();
