@@ -14,6 +14,7 @@ exports.handler = function (event, context, callback) {
   var phantomPath = path.join(__dirname, 'phantomjs_linux-x86_64');
 
   var target = '/tmp/' + key;
+  //console.log('Preview Ecard URL:', args.Url.Value);
 
   // Arguments for the phantom script
   var processArgs = [
@@ -35,6 +36,7 @@ exports.handler = function (event, context, callback) {
       callback(error);
       return;
     }
+    //console.log(stdout);
 
     //upload the file to s3
     new AWS.S3().upload({
@@ -42,12 +44,16 @@ exports.handler = function (event, context, callback) {
       Key: key,
       ContentType: 'image/png',
       Body: fs.createReadStream(target)
-    }, function (err, data) {
-      if (err) {
-        callback(err);
-      } else {
-        callback(null, 'Done!');
-      }
+    }, function (err) {
+      // delete the file
+      fs.unlink(target, function(err2) {
+        if (err) {
+          callback(err);
+        } else {
+          // signal done to aws
+          callback(null, 'Done!');
+        }
+      });
     });
   });
 }

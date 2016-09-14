@@ -10,6 +10,7 @@ var target = system.args[2]; //local file name to write the image to
 page.onLoadFinished = function () {
   // set the clip region to match the .ecard-body size
   page.clipRect = page.evaluateJavaScript("function() { var element = jQuery('.ecard-body'); return jQuery.extend(element.offset(), {width: element.outerWidth(), height: element.outerHeight()});}");
+  //system.stdout.write('clipRect: ' + JSON.stringify(page.clipRect));
   page.render(target);
   phantom.exit();
 }
