@@ -2,6 +2,7 @@ var childProcess = require('child_process');
 var path = require('path');
 var AWS = require('aws-sdk');
 var fs = require('fs');
+var http = require('http');
 
 exports.handler = function (event, context, callback) {
   var args = event.Records[0].Sns.MessageAttributes,
@@ -54,6 +55,10 @@ exports.handler = function (event, context, callback) {
           callback(null, 'Done!');
         }
       });
+
+      if(args.ReturnUrl){
+        http.get(args.ReturnUrl.Value)
+      }
     });
   });
 }
