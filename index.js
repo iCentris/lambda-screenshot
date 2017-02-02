@@ -56,8 +56,8 @@ exports.handler = function (event, context, callback) {
         }
       });
 
-      if(args.ReturnUrl){
-        http.get(args.ReturnUrl.Value)
+      if(args.CallbackUrl){
+        http.get(args.CallbackUrl.Value)
       }
     });
   });
