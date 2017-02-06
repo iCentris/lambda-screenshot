@@ -43,7 +43,7 @@ exports.handler = function (event, context, callback) {
     new AWS.S3().upload({
       Bucket: args.Bucket.Value,
       Key: key,
-      ContentType: 'image/png',
+      ContentType: args.ContentType.Value
       Body: fs.createReadStream(target)
     }, function (err) {
       // delete the file
@@ -57,7 +57,7 @@ exports.handler = function (event, context, callback) {
       });
 
       if(args.CallbackUrl){
-        http.get(args.CallbackUrl.Value)
+        http.get(args.CallbackUrl.Value);
       }
     });
   });
