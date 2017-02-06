@@ -43,7 +43,7 @@ exports.handler = function (event, context, callback) {
     new AWS.S3().upload({
       Bucket: args.Bucket.Value,
       Key: key,
-      ContentType: args.ContentType.Value
+      ContentType: args.ContentType.Value,
       Body: fs.createReadStream(target)
     }, function (err) {
       // delete the file
