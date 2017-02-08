@@ -2,12 +2,22 @@ var childProcess = require('child_process');
 var path = require('path');
 var AWS = require('aws-sdk');
 var fs = require('fs');
-var http = require('http');
+var request = require('request');
+
+
+function vibeCallback(resourceType, resourceId, configurationCaptureTime, callback) {
+  config.getResourceConfigHistory({ resourceType, resourceId, laterTime: new Date(configurationCaptureTime), limit: 1 }, (err, data) => {
+    if (err) {
+        callback(err, null);
+    }
+    const configurationItem = data.configurationItems[0];
+    callback(null, configurationItem);
+  });
+}
 
 exports.handler = function (event, context, callback) {
-  var args = event.Records[0].Sns.MessageAttributes,
-      key = args.Key.Value;
-
+  var args = event.Records[0].Sns.MessageAttributes;
+  var key = args.Key.Value;
   // Set the path as described here: https://aws.amazon.com/blogs/compute/running-executables-in-aws-lambda/
   process.env['PATH'] += ':' + process.env['LAMBDA_TASK_ROOT'];
 
@@ -27,18 +37,65 @@ exports.handler = function (event, context, callback) {
     target
   ];
 
+
+  var callbackUrlOptions = {};
+
+  if(args.CallbackUrl) {
+    callbackUrlOptions = {
+      url: args.CallbackUrl,
+      method: 'GET',
+      qs: {}
+    }
+  }
+
+  var successCallback = function(error, result) {
+    console.log("Success Callback", key, result);
+    if(args.CallbackUrl) {
+      callbackUrlOptions["qs"]["lambda_success"] = "true";
+      request(callbackUrlOptions, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+          console.log("CallbackUrl Successful. S3-object created", key);
+          callback(null, "Done!");
+        } else {
+          console.log("CallbackUrl failed. But s3-object created", key);
+          callback(error);
+        }
+      })
+    } else {
+      console.log("S3-object created", key);
+      callback(null, "Done!");
+    }
+  }
+
+  var errorCallback = function(error, result) {
+    console.log("Error Callback", key, result);
+    if(args.CallbackUrl) {
+      callbackUrlOptions["qs"]["lambda_failure"] = "true";
+      request(callbackUrlOptions, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+          console.log("CallbackUrl Successful. S3-object NOT created", key, result);
+          callback(error);
+        } else {
+          console.log("CallbackUrl NOT Successful. S3-object NOT created", key, result);
+          callback(error);
+        }
+      })
+    } else {
+      console.log("S3-object NOT created", key, result);
+      callback(error);
+    }
+  }
+    
   // Launch the child process
   childProcess.execFile(phantomPath, processArgs, {}, function (error, stdout, stderr) {
     if (error) {
-      callback(error);
+      errorCallback(error, "child process error-1");
       return;
     }
     if (stderr) {
-      callback(error);
+      errorCallback(stderr, "child process error-2");
       return;
     }
-    //console.log(stdout);
-
     //upload the file to s3
     new AWS.S3().upload({
       Bucket: args.Bucket.Value,
@@ -49,16 +106,12 @@ exports.handler = function (event, context, callback) {
       // delete the file
       fs.unlink(target, function(err2) {
         if (err) {
-          callback(err);
+          errorCallback(error, "s3 failed");
         } else {
           // signal done to aws
-          callback(null, 'Done!');
+          successCallback(null, 'Done!');
         }
       });
-
-      if(args.CallbackUrl){
-        http.get(args.CallbackUrl.Value);
-      }
     });
   });
 }
