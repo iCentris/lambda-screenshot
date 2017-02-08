@@ -4,17 +4,6 @@ var AWS = require('aws-sdk');
 var fs = require('fs');
 var request = require('request');
 
-
-function vibeCallback(resourceType, resourceId, configurationCaptureTime, callback) {
-  config.getResourceConfigHistory({ resourceType, resourceId, laterTime: new Date(configurationCaptureTime), limit: 1 }, (err, data) => {
-    if (err) {
-        callback(err, null);
-    }
-    const configurationItem = data.configurationItems[0];
-    callback(null, configurationItem);
-  });
-}
-
 exports.handler = function (event, context, callback) {
   var args = event.Records[0].Sns.MessageAttributes;
   var key = args.Key.Value;
