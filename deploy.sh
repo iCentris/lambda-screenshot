@@ -7,7 +7,7 @@ if [ -f $file ]; then
   zip -f $file
 else
   echo "Creating the archive..."
-  zip $file index.js phantom-script.js phantomjs_linux-x86_64
+  zip -r $file index.js phantom-script.js phantomjs_linux-x86_64 node_modules/
 fi
 
 echo "Archive is ready"
