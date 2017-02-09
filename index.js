@@ -6,9 +6,12 @@ var request = require('request');
 
 exports.handler = function (event, context, callback) {
   var args = event.Records[0].Sns.MessageAttributes;
+  console.log("Start", args);
   var key = args.Key.Value;
   // Set the path as described here: https://aws.amazon.com/blogs/compute/running-executables-in-aws-lambda/
   process.env['PATH'] += ':' + process.env['LAMBDA_TASK_ROOT'];
+  
+  
 
   // Set the path to the phantomjs binary
   var phantomPath = path.join(__dirname, 'phantomjs_linux-x86_64');
@@ -31,7 +34,7 @@ exports.handler = function (event, context, callback) {
 
   if(args.CallbackUrl) {
     callbackUrlOptions = {
-      url: args.CallbackUrl,
+      url: args.CallbackUrl.Value,
       method: 'GET',
       qs: {}
     }
