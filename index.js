@@ -98,7 +98,9 @@ exports.handler = function (event, context, callback) {
       // delete the file
       fs.unlink(target, function(err2) {
         if (err) {
-          errorCallback(error, "s3 failed");
+          errorCallback(err, "s3 failed");
+        } else if (err2) {
+          errorCallback(err2, "s3 failed");
         } else {
           // signal done to aws
           successCallback(null, 'Done!');
